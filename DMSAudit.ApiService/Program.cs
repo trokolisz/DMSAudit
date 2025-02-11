@@ -23,6 +23,7 @@ Log.Logger = new LoggerConfiguration()
         outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}",
         restrictedToMinimumLevel: LogEventLevel.Information)
     .Enrich.FromLogContext()
+    .Enrich.WithProperty("Application", "DMSAudit.ApiService")
     .CreateLogger();
 
 var builder = WebApplication.CreateBuilder(args);
@@ -48,7 +49,6 @@ builder.Services.AddOpenApi();
 // Add DbContext configuration
 builder.Services.AddDbContext<DmsDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
-
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -77,17 +77,17 @@ builder.Services.AddSwaggerGen(options =>
 
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            Array.Empty<string>()
-        }
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        Array.Empty<string>()
+                    }
     });
 });
 
@@ -109,7 +109,7 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "DMSAudit",
         ValidAudience = builder.Configuration["Jwt:Audience"] ?? "DMSAudit",
         IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? 
+            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ??
                 throw new InvalidOperationException("JWT Key not found in configuration")))
     };
 });
@@ -127,7 +127,7 @@ var app = builder.Build();
 // Add this after app.UseExceptionHandler() but before other middleware
 app.Use(async (context, next) =>
 {
-    using (LogContext.PushProperty("ClientIP", 
+    using (LogContext.PushProperty("ClientIP",
         context.Request.Headers["X-Forwarded-For"].FirstOrDefault()
         ?? context.Connection.RemoteIpAddress?.ToString()
         ?? "unknown"))
@@ -151,11 +151,11 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
     app.UseSwaggerUI(options =>
-{
-    options.SwaggerEndpoint("/swagger/v1/swagger.json", "TicketApp API V1");
-    options.RoutePrefix = "swagger";
-    options.DocumentTitle = "TicketApp API Documentation";
-});
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "TicketApp API V1");
+        options.RoutePrefix = "swagger";
+        options.DocumentTitle = "TicketApp API Documentation";
+    });
 }
 app.UseExceptionHandler();
 app.UseAuthentication();
