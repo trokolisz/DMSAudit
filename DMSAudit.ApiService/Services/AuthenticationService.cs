@@ -89,7 +89,7 @@ public class AuthenticationService : IAuthenticationService
             {
                 if (user != null)
                 {
-                    var groups = user.GetGroups();
+                    var groups = await Task.Run(() => user.GetGroups());
                     return groups.Select(g => g.Name);
                 }
             }

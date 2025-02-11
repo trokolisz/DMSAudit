@@ -8,8 +8,33 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using DMSAudit.ApiService.Services;
+using Serilog;
+using Serilog.Events;
+using Microsoft.Extensions.Logging;
+using Serilog.Context;
+using Microsoft.AspNetCore.HttpLogging;
+
+// Replace the existing Serilog configuration with this enhanced version
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .WriteTo.File(
+        Path.Combine("Logs", "log-.txt"),
+        rollingInterval: RollingInterval.Day,
+        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}",
+        restrictedToMinimumLevel: LogEventLevel.Information)
+    .Enrich.FromLogContext()
+    .CreateLogger();
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Add Serilog to the application
+builder.Host.UseSerilog();
+
+// Add HTTP logging
+builder.Services.AddHttpLogging(logging =>
+{
+    logging.LoggingFields = HttpLoggingFields.All;
+});
 
 // Add service defaults & Aspire client integrations.
 builder.AddServiceDefaults();
@@ -66,17 +91,7 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-
-
-
-builder.Services.AddLogging(logging =>
-{
-    logging.AddConsole();
-    logging.AddDebug();
-    logging.SetMinimumLevel(LogLevel.Information);
-});
-
-// Add Windows Authentication
+// Windows Authentication
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -109,6 +124,22 @@ builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 
 var app = builder.Build();
 
+// Add this after app.UseExceptionHandler() but before other middleware
+app.Use(async (context, next) =>
+{
+    using (LogContext.PushProperty("ClientIP", 
+        context.Request.Headers["X-Forwarded-For"].FirstOrDefault()
+        ?? context.Connection.RemoteIpAddress?.ToString()
+        ?? "unknown"))
+    using (LogContext.PushProperty("Path", context.Request.Path))
+    using (LogContext.PushProperty("Method", context.Request.Method))
+    {
+        await next();
+    }
+});
+
+// Add this after the previous middleware
+app.UseHttpLogging();
 
 app.MapCriteriaEndpoints();
 app.MapStatusEndpoints();
@@ -134,5 +165,8 @@ app.UseAuthorization();
 app.MapTokenEndpoints();
 
 app.MapDefaultEndpoints();
+
+// Add this before app.Run():
+app.Lifetime.ApplicationStopped.Register(Log.CloseAndFlush);
 
 app.Run();
