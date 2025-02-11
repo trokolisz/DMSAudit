@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DMSAudit.ApiService", "DMSAudit.ApiService.csproj", "{ED5B891C-97A7-EAC4-00CF-FC87AAAFFEDA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{ED5B891C-97A7-EAC4-00CF-FC87AAAFFEDA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ED5B891C-97A7-EAC4-00CF-FC87AAAFFEDA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ED5B891C-97A7-EAC4-00CF-FC87AAAFFEDA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ED5B891C-97A7-EAC4-00CF-FC87AAAFFEDA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F51137BC-4254-4169-9E21-E1AEFE24BA8E}
+	EndGlobalSection
+EndGlobal
